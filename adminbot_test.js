@@ -3,7 +3,7 @@
 const puppeteer = require("puppeteer");
 
 const FLAG = "osu{test_flag}";
-const SITE = "https://profile-page.web.osugaming.lol";
+const SITE = "https://profile-page-revenge.web.osugaming.lol";
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 

@@ -5,6 +5,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm i
 
+COPY public ./public
 COPY views ./views
 COPY app.js ./
 

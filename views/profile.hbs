@@ -3,9 +3,11 @@
   <head>
     <link rel="stylesheet" media="all" href="https://osugaming.lol/assets/css/app.5fe70da2.css">
     <title>{{ user.username }} | osu!</title>
+    <script src="snow.js" nonce="{{ nonce }}"></script>
+    <script src="antixss.js" nonce="{{ nonce }}"></script>
   </head>
   <body class="t-section osu-layout osu-layout--body">
-    <style>
+    <style nonce="{{ nonce }}">
       :root {
         --base-hue: 333;
         --base-hue-deg: 333deg;
@@ -33,7 +35,7 @@
               </div>
               <div class="nav2__col nav2__col--menu">
                 {{#if user}}
-                <a class="nav2__menu-link-main js-menu" href="/profile/{{ user.username }}">
+                <a class="nav2__menu-link-main js-menu" href="/profile">
                   <span class="u-relative"> profile <span class="nav2__menu-link-bar u-section--bg-normal"></span>
                   </span>
                 </a>
@@ -170,7 +172,22 @@
             <div class="page-extra page-extra--userpage">
               <div class="page-extra__content-overflow-wrapper-outer u-fancy-scrollbar">
                 <div class="page-extra__content-overflow-wrapper-inner">
-                  {{{ user.bio }}}
+                  <iframe sandbox="allow-scripts allow-same-origin" srcdoc="
+                    <head>
+                      <script src='snow.js' nonce='{{ nonce }}'></script>
+                      <script src='antixss.js' nonce='{{ nonce }}'></script>
+                      <style nonce='{{ nonce }}'>
+                        * {
+                          color: white;
+                          font-family: Torus, Inter, Arial;
+                        }
+                      </style>
+                    </head>
+                    <body>
+                      {{ user.bio }}
+                      <script src='bio.js'></script>
+                    </body>
+                  "></iframe>
                 </div>
               </div>
             </div>

@@ -6,7 +6,7 @@ import { JSDOM } from "jsdom";
 import DOMPurify from "dompurify";
 
 const app = express();
-const PORT = process.env.PORT || 2727;
+const PORT = process.env.PORT || 3727;
 
 app.use(express.urlencoded({ extended: false }));
 app.use(expressSession({
@@ -19,6 +19,19 @@ app.use(cookieParser());
 app.set("view engine", "hbs");
 
 app.use((req, res, next) => {
+    res.locals.nonce = crypto.randomBytes(32).toString("hex");
+    res.setHeader("Content-Security-Policy", `
+        default-src https://osugaming.lol 'self';
+        style-src https://osugaming.lol 'nonce-${res.locals.nonce}';
+        script-src 'self' 'nonce-${res.locals.nonce}';
+        object-src 'none';
+        frame-src 'self' https://www.youtube.com;
+        form-action 'self';
+        frame-ancestors 'none';
+        base-uri 'self';
+    `.trim().replace(/\s+/g, " "));
+    res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+    res.setHeader("X-Frame-Options", "DENY");
     if (req.session.user && users.has(req.session.user)) {
         req.user = users.get(req.session.user);
         res.locals.user = req.user;
@@ -40,6 +53,7 @@ const renderBBCode = (data) => {
     return data;
 };
 const renderBio = (data) => {
+    data = data.replaceAll(/</g, "&lt;").replaceAll(/>/g, "&gt;");
     const html = renderBBCode(data);
     const sanitized = purify.sanitize(html);
     // do this after sanitization because otherwise iframe will be removed
@@ -60,7 +74,7 @@ app.post("/api/register", (req, res) => {
     if (!username || typeof username !== "string" || !password || typeof password !== "string") {
         return res.end("missing username or password");
     }
-
+    
     if (username.length < 5 || password.length < 8) {
         return res.end("username or password too short");
     }
@@ -81,7 +95,7 @@ app.post("/api/register", (req, res) => {
 
     req.session.user = username;
     res.cookie("csrf", crypto.randomBytes(32).toString("hex"));
-    res.redirect("/profile/" + username);
+    res.redirect("/profile");
 });
 
 app.post("/api/login", (req, res) => {
@@ -101,7 +115,7 @@ app.post("/api/login", (req, res) => {
 
     req.session.user = username;
     res.cookie("csrf", crypto.randomBytes(32).toString("hex"));
-    res.redirect("/profile/" + username);
+    res.redirect("/profile");
 });
 
 // TODO: update bio from UI
@@ -130,16 +144,7 @@ app.post("/api/update", requiresLogin, (req, res) => {
 
 app.get("/login", (req, res) => res.render("login"));
 app.get("/register", (req, res) => res.render("register"));
-app.get("/profile", requiresLogin, (req, res) => res.redirect("/profile/" + req.user.username));
-app.get("/profile/:user", (req, res) => {
-    const { user } = req.params;
-    if (!users.has(user)) {
-        return res.end("no user exists with that username!");
-    }
-    res.locals.user = users.get(user);
-    res.render("profile");
-});
-
+app.get("/profile", requiresLogin, (req, res) => res.render("profile"));
 app.get("/", (req, res) => res.redirect("/profile"));
 
 app.get('*', (req, res) => {
@@ -148,4 +153,4 @@ app.get('*', (req, res) => {
     res.send(`Error: ${req.originalUrl} was not found`);
 });
 
-app.listen(PORT, () => console.log(`web/profile-page listening at http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`web/profile-page-revenge listening at http://localhost:${PORT}`));
